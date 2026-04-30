@@ -123,3 +123,38 @@ async def ingest_pdf(file: UploadFile = File(...)):
         },
         status_code=201,
     )
+
+@app.post("/query", response_model=QueryResponse, tags=["Query"])
+async def query_report(req: QueryRequest):
+    """
+    Ask a finance question against an ingested annual report.
+    Runs the 3-step reasoning pipeline:
+      A) Navigator — picks the best pages
+      B) Reader   — extracts raw text
+      C) Expert   — generates a SEBI-grade answer
+    """
+    pdf_stem = Path(req.pdf_name).stem
+    index_path = INDEX_DIR / pdf_stem / "index.json"
+    pages_path = INDEX_DIR / pdf_stem / "pages.json"
+    if not index_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"No index found for '{req.pdf_name}'. "
+                f"Please ingest the PDF first via POST /ingest."
+            ),
+        )
+    # Load index & pages
+    with open(index_path, "r", encoding="utf-8") as f:
+        index = ujson.load(f)
+    with open(pages_path, "r", encoding="utf-8") as f:
+        pages_text = ujson.load(f)
+    # Run pipeline
+    result = query_pipeline(
+        question=req.question,
+        index=index,
+        pages_text=pages_text,
+        model=OLLAMA_MODEL,
+        base_url=OLLAMA_BASE_URL,
+    )
+    return QueryResponse(**result)
