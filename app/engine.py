@@ -86,3 +86,24 @@ def _parse_page_numbers(raw: str) -> list[int]:
     # Fallback: extract all integers from the string
     numbers = re.findall(r"\d+", raw)
     return [int(n) for n in numbers[:3]]  # cap at 3 pages
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Step B — The Reader
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+def read_pages(page_nums: list[int], pages_text: dict[str, str]) -> str:
+    """
+    Step B: Extract and concatenate raw text from the selected pages.
+    """
+    chunks = []
+    for pn in page_nums:
+        key = str(pn)
+        if key in pages_text:
+            chunks.append(f"\n{'='*60}\n PAGE {pn} \n{'='*60}\n{pages_text[key]}")
+        else:
+            logger.warning("Page %d not found in stored text — skipping", pn)
+    combined = "\n".join(chunks)
+    logger.info(
+        "Reader extracted %d chars from %d pages",
+        len(combined), len(chunks),
+    )
+    return combined
