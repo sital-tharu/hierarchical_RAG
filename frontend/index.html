@@ -6,234 +6,358 @@
   <title>Vectorless RAG — Indian Finance Analyzer</title>
   <meta name="description" content="AI-powered Indian Financial Annual Report analyzer using Vectorless RAG with Ollama. No vector database — just structured JSON indexing and multi-step LLM reasoning." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/styles.css" />
 </head>
 <body>
-  <!-- ── Background orbs ── -->
-  <div class="bg-orb orb-1"></div>
-  <div class="bg-orb orb-2"></div>
-  <div class="bg-orb orb-3"></div>
+
+  <!-- ── Background Orbs ── -->
+  <div class="bg-mesh">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-orb bg-orb--3"></div>
+  </div>
 
   <!-- ══════════════════════════════════════
-       HEADER
+       HEADER / HERO
   ══════════════════════════════════════ -->
-  <header class="app-header">
+  <header class="site-header">
     <div class="header-inner">
-      <div class="brand">
-        <div class="brand-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <circle cx="14" cy="14" r="13" stroke="url(#brandGrad)" stroke-width="2"/>
-            <path d="M8 14h12M14 8v12" stroke="url(#brandGrad)" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="14" cy="14" r="3" fill="url(#brandGrad)"/>
-            <defs>
-              <linearGradient id="brandGrad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#6366f1"/>
-                <stop offset="1" stop-color="#8b5cf6"/>
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <span class="brand-name">Vectorless RAG</span>
-          <span class="brand-sub">Indian Finance Analyzer</span>
+      <div class="logo">
+        <span class="logo-icon">🧠</span>
+        <div class="logo-text">
+          <span class="logo-text--gradient">Vectorless</span>
+          <span class="logo-text--sub">RAG</span>
         </div>
       </div>
-
-      <nav class="tab-nav" role="tablist">
-        <button class="tab-btn active" id="tab-upload" role="tab" aria-selected="true" aria-controls="panel-upload" onclick="switchTab('upload')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Ingest PDF
-        </button>
-        <button class="tab-btn" id="tab-query" role="tab" aria-selected="false" aria-controls="panel-query" onclick="switchTab('query')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Query
-        </button>
-        <button class="tab-btn" id="tab-explorer" role="tab" aria-selected="false" aria-controls="panel-explorer" onclick="switchTab('explorer')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          Index Explorer
-        </button>
-      </nav>
-
-      <div class="header-status">
-        <div class="status-dot" id="statusDot"></div>
-        <span class="status-label" id="statusLabel">Checking...</span>
+      <p class="tagline">Indian Financial Annual Report Analyzer · Powered by Ollama · No Vector DB</p>
+      <div id="status-pill" class="status-pill">
+        <div id="status-dot" class="status-dot"></div>
+        <span id="status-label">Checking…</span>
       </div>
     </div>
   </header>
 
   <!-- ══════════════════════════════════════
-       MAIN CONTENT
+       TAB NAVIGATION
   ══════════════════════════════════════ -->
-  <main class="app-main">
+  <nav class="tab-nav" role="tablist" aria-label="Main navigation">
+    <div class="tab-nav-inner">
+      <!-- Animated slider background -->
+      <div id="tab-slider" class="tab-slider"></div>
 
-    <!-- ── Panel: Ingest ── -->
-    <section class="panel active" id="panel-upload" role="tabpanel" aria-labelledby="tab-upload">
-      <div class="panel-header">
-        <h1 class="panel-title">Ingest Annual Report</h1>
-        <p class="panel-subtitle">Upload an Indian Financial Annual Report PDF to build its PageIndex</p>
-      </div>
-
-      <div class="upload-zone" id="uploadZone">
-        <div class="upload-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="12" y1="18" x2="12" y2="12"/>
-            <line x1="9" y1="15" x2="15" y2="15"/>
-          </svg>
-        </div>
-        <p class="upload-text">Drop your PDF here or <span class="upload-link" onclick="document.getElementById('fileInput').click()">browse</span></p>
-        <p class="upload-hint">Supports Indian Financial Annual Reports · Max 100MB</p>
-        <input type="file" id="fileInput" accept=".pdf" hidden onchange="handleFileSelect(this)" />
-      </div>
-
-      <div class="selected-file hidden" id="selectedFile">
-        <div class="file-info">
-          <div class="file-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-          <div class="file-meta">
-            <span class="file-name" id="selectedFileName">—</span>
-            <span class="file-size" id="selectedFileSize">—</span>
-          </div>
-          <button class="file-remove" onclick="clearFile()" title="Remove file">✕</button>
-        </div>
-      </div>
-
-      <button class="btn btn-primary btn-lg" id="ingestBtn" onclick="ingestPDF()" disabled>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Start Ingestion
+      <button
+        class="tab-btn active"
+        role="tab"
+        aria-selected="true"
+        aria-controls="panel-upload"
+        data-tab="upload"
+      >
+        <span class="tab-icon">📤</span>
+        <span class="tab-label">Ingest PDF</span>
       </button>
 
-      <!-- Progress -->
-      <div class="progress-card hidden" id="progressCard">
-        <div class="progress-header">
-          <span class="progress-label" id="progressLabel">Uploading...</span>
-          <span class="progress-pct" id="progressPct">0%</span>
-        </div>
-        <div class="progress-bar-track">
-          <div class="progress-bar-fill" id="progressFill"></div>
-        </div>
-        <div class="progress-steps">
-          <div class="progress-step" id="step-upload">
-            <div class="step-dot"></div>
-            <span>Upload PDF</span>
-          </div>
-          <div class="progress-step" id="step-extract">
-            <div class="step-dot"></div>
-            <span>Extract Pages</span>
-          </div>
-          <div class="progress-step" id="step-index">
-            <div class="step-dot"></div>
-            <span>Build PageIndex</span>
-          </div>
-          <div class="progress-step" id="step-done">
-            <div class="step-dot"></div>
-            <span>Complete</span>
-          </div>
-        </div>
-      </div>
+      <button
+        class="tab-btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-query"
+        data-tab="query"
+      >
+        <span class="tab-icon">💬</span>
+        <span class="tab-label">Query</span>
+      </button>
 
-      <!-- Result -->
-      <div class="result-card hidden" id="ingestResult"></div>
+      <button
+        class="tab-btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-explorer"
+        data-tab="explorer"
+      >
+        <span class="tab-icon">🗂️</span>
+        <span class="tab-label">Index Explorer</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <main class="main-content">
+
+    <!-- ── Panel: Ingest PDF ── -->
+    <section
+      id="panel-upload"
+      class="panel panel--active"
+      role="tabpanel"
+      aria-labelledby="tab-upload"
+    >
+      <div class="glass-card panel-card">
+        <div class="panel-header">
+          <h2>📄 Ingest Annual Report</h2>
+          <p class="panel-subtitle">Upload an Indian Financial Annual Report PDF to build its hierarchical PageIndex via Ollama</p>
+        </div>
+
+        <!-- Drop Zone -->
+        <div
+          id="drop-zone"
+          class="drop-zone"
+          role="button"
+          tabindex="0"
+          aria-label="Drop PDF file here or click to browse"
+        >
+          <div id="drop-zone-content">
+            <div class="drop-icon">
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+            </div>
+            <p class="drop-text">Drop your PDF here or <strong>click to browse</strong></p>
+            <p class="drop-hint">Indian Financial Annual Reports · Max 100 MB</p>
+            <span class="drop-formats">.pdf</span>
+          </div>
+          <input type="file" id="file-input" accept=".pdf" hidden aria-label="Select PDF file" />
+        </div>
+
+        <!-- Selected file badge -->
+        <div id="file-info" class="file-info hidden">
+          <span class="file-info-icon">📎</span>
+          <div class="file-info-details">
+            <span id="file-info-name" class="file-info-name">—</span>
+            <span id="file-info-size" class="file-info-size">—</span>
+          </div>
+          <button id="file-info-remove" class="file-info-remove" title="Remove file">✕</button>
+        </div>
+
+        <!-- Ingest button -->
+        <button id="ingest-btn" class="btn btn-primary btn-lg" disabled aria-label="Start ingestion">
+          <span class="btn-icon">🚀</span>
+          Start Ingestion
+        </button>
+
+        <!-- Progress section -->
+        <div id="progress-section" class="progress-section hidden">
+          <div class="progress-header">
+            <span id="progress-title" class="progress-title">Preparing…</span>
+            <span id="progress-pct" class="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+          </div>
+          <div class="progress-steps">
+            <div class="progress-step" data-step="upload">
+              <div class="step-dot"></div>
+              <span class="step-label">Upload</span>
+            </div>
+            <div class="progress-step" data-step="extract">
+              <div class="step-dot"></div>
+              <span class="step-label">Extract</span>
+            </div>
+            <div class="progress-step" data-step="summarize">
+              <div class="step-dot"></div>
+              <span class="step-label">Summarize</span>
+            </div>
+            <div class="progress-step" data-step="index">
+              <div class="step-dot"></div>
+              <span class="step-label">Index</span>
+            </div>
+          </div>
+          <p id="progress-detail" class="progress-detail"></p>
+        </div>
+
+        <!-- Ingest result -->
+        <div id="ingest-result" class="ingest-result hidden glass-card">
+          <div class="result-success">
+            <div class="result-icon">✅</div>
+            <div id="result-title" class="result-title">Ingestion Complete!</div>
+            <div id="result-detail" class="result-detail"></div>
+          </div>
+          <pre id="result-preview" class="result-preview"></pre>
+        </div>
+
+      </div>
     </section>
 
     <!-- ── Panel: Query ── -->
-    <section class="panel" id="panel-query" role="tabpanel" aria-labelledby="tab-query">
-      <div class="panel-header">
-        <h2 class="panel-title">Query Annual Report</h2>
-        <p class="panel-subtitle">Ask financial questions — the 3-step AI pipeline answers using only the relevant pages</p>
-      </div>
+    <section
+      id="panel-query"
+      class="panel"
+      role="tabpanel"
+      aria-labelledby="tab-query"
+    >
+      <div class="glass-card panel-card">
+        <div class="panel-header">
+          <h2>💬 Query Annual Report</h2>
+          <p class="panel-subtitle">Ask financial questions — the 3-step AI pipeline (Navigator → Reader → Expert) answers using only the relevant pages</p>
+        </div>
 
-      <div class="query-controls">
-        <div class="form-group">
-          <label class="form-label" for="pdfSelect">Select Report</label>
-          <div class="select-wrapper">
-            <select class="form-select" id="pdfSelect">
-              <option value="">— Select an ingested report —</option>
-            </select>
-            <button class="btn btn-icon" onclick="loadIndices()" title="Refresh list">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        <!-- Report selector -->
+        <div class="query-header">
+          <div class="report-selector">
+            <span class="selector-label">Report:</span>
+            <div class="select-wrapper">
+              <select id="report-select" class="select-input" aria-label="Select ingested report">
+                <option value="" disabled selected>Select a report…</option>
+              </select>
+              <span class="select-arrow">▾</span>
+            </div>
+            <button id="refresh-reports-btn" class="btn btn-outline btn-sm" title="Refresh report list" aria-label="Refresh reports">
+              🔄
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Chat window -->
-      <div class="chat-window" id="chatWindow">
-        <div class="chat-empty" id="chatEmpty">
-          <div class="chat-empty-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <p>Select a report and ask a question to begin</p>
-          <div class="example-queries">
-            <p class="example-label">Try asking:</p>
-            <button class="example-chip" onclick="setExampleQuery(this)">What was the total revenue for FY24?</button>
-            <button class="example-chip" onclick="setExampleQuery(this)">What is the PAT for FY25?</button>
-            <button class="example-chip" onclick="setExampleQuery(this)">Summarize the Director's Report</button>
-            <button class="example-chip" onclick="setExampleQuery(this)">What is the Debt-to-Equity ratio?</button>
+        <!-- Pipeline progress indicator (hidden until query starts) -->
+        <div id="pipeline-progress" class="pipeline-progress hidden">
+          <div class="pipeline-steps">
+            <div id="pipe-step-nav" class="pipeline-step">
+              <div class="pipeline-step-indicator">
+                <span class="pipeline-step-num">A</span>
+                <div class="pipeline-spinner"></div>
+              </div>
+              <div class="pipeline-step-info">
+                <span class="pipeline-step-name">Navigator</span>
+                <span class="pipeline-step-desc">Selecting relevant pages…</span>
+              </div>
+            </div>
+            <div class="pipeline-connector"></div>
+            <div id="pipe-step-read" class="pipeline-step">
+              <div class="pipeline-step-indicator">
+                <span class="pipeline-step-num">B</span>
+                <div class="pipeline-spinner"></div>
+              </div>
+              <div class="pipeline-step-info">
+                <span class="pipeline-step-name">Reader</span>
+                <span class="pipeline-step-desc">Extracting page content…</span>
+              </div>
+            </div>
+            <div class="pipeline-connector"></div>
+            <div id="pipe-step-expert" class="pipeline-step">
+              <div class="pipeline-step-indicator">
+                <span class="pipeline-step-num">C</span>
+                <div class="pipeline-spinner"></div>
+              </div>
+              <div class="pipeline-step-info">
+                <span class="pipeline-step-name">Expert</span>
+                <span class="pipeline-step-desc">Generating SEBI-grade answer…</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="chat-messages" id="chatMessages"></div>
-      </div>
 
-      <!-- Query input -->
-      <div class="query-input-row">
-        <div class="query-input-wrap">
-          <textarea
-            class="query-input"
-            id="queryInput"
-            placeholder="Ask a financial question about the selected annual report..."
-            rows="2"
-            onkeydown="handleQueryKeydown(event)"
-          ></textarea>
+        <!-- Chat area -->
+        <div id="chat-area" class="chat-area">
+          <div id="chat-empty" class="chat-empty">
+            <div class="chat-empty-icon">🔍</div>
+            <h3>Ready to Analyze</h3>
+            <p>Select an ingested report and ask a financial question</p>
+            <div class="example-queries">
+              <button class="example-query" data-query="What was the total revenue for FY24?">What was the total revenue for FY24?</button>
+              <button class="example-query" data-query="What is the PAT for FY25?">What is the PAT for FY25?</button>
+              <button class="example-query" data-query="Summarize the Director's Report">Summarize the Director's Report</button>
+              <button class="example-query" data-query="What is the Debt-to-Equity ratio?">What is the Debt-to-Equity ratio?</button>
+            </div>
+          </div>
+          <div id="chat-messages" class="chat-messages" style="display:none;"></div>
         </div>
-        <button class="btn btn-primary btn-send" id="sendBtn" onclick="sendQuery()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
+
+        <!-- Chat input -->
+        <div class="chat-input-area">
+          <div class="chat-input-wrapper">
+            <textarea
+              id="chat-input"
+              class="chat-input"
+              placeholder="Ask a financial question about the selected annual report… (Enter to send, Shift+Enter for newline)"
+              rows="1"
+              aria-label="Financial question input"
+            ></textarea>
+            <button id="send-btn" class="btn btn-send" disabled aria-label="Send query">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
       </div>
     </section>
 
     <!-- ── Panel: Index Explorer ── -->
-    <section class="panel" id="panel-explorer" role="tabpanel" aria-labelledby="tab-explorer">
-      <div class="panel-header">
-        <h2 class="panel-title">Index Explorer</h2>
-        <p class="panel-subtitle">Browse the JSON PageIndex for any ingested annual report</p>
-      </div>
-
-      <div class="explorer-controls">
-        <div class="form-group">
-          <label class="form-label" for="explorerSelect">Select Report</label>
-          <div class="select-wrapper">
-            <select class="form-select" id="explorerSelect" onchange="loadIndex()">
-              <option value="">— Select a report to explore —</option>
-            </select>
-            <button class="btn btn-icon" onclick="loadIndices()" title="Refresh">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-            </button>
-          </div>
+    <section
+      id="panel-explorer"
+      class="panel"
+      role="tabpanel"
+      aria-labelledby="tab-explorer"
+    >
+      <div class="glass-card panel-card">
+        <div class="panel-header">
+          <h2>🗂️ Index Explorer</h2>
+          <p class="panel-subtitle">Browse the hierarchical JSON PageIndex for any ingested annual report</p>
+          <button id="refresh-indices-btn" class="btn btn-outline btn-sm" aria-label="Refresh index list">🔄 Refresh</button>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="explorerSearch">Search Pages</label>
-          <input class="form-input" id="explorerSearch" type="text" placeholder="Search summaries..." oninput="filterPages()" />
-        </div>
-      </div>
 
-      <div class="explorer-stats hidden" id="explorerStats"></div>
-
-      <div class="page-grid" id="pageGrid">
-        <div class="explorer-empty">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          <p>Select a report to explore its PageIndex</p>
+        <!-- Loading skeleton -->
+        <div id="explorer-loading" class="skeleton-grid hidden">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
         </div>
+
+        <!-- Empty state -->
+        <div id="explorer-empty" class="explorer-empty hidden">
+          <div class="empty-icon">📭</div>
+          <h3>No Reports Indexed</h3>
+          <p>Ingest a PDF first using the <strong>Ingest PDF</strong> tab</p>
+        </div>
+
+        <!-- Index grid -->
+        <div id="index-grid" class="index-grid hidden"></div>
+
       </div>
     </section>
 
   </main>
 
-  <!-- ── Toast Notification ── -->
-  <div class="toast" id="toast" role="alert" aria-live="polite"></div>
+  <!-- ══════════════════════════════════════
+       INDEX MODAL
+  ══════════════════════════════════════ -->
+  <div id="index-modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal glass-card">
+      <div class="modal-header">
+        <span id="modal-title" class="modal-title">Index Details</span>
+        <button id="modal-close" class="modal-close" aria-label="Close modal">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       TOAST CONTAINER
+  ══════════════════════════════════════ -->
+  <div id="toast-container" role="alert" aria-live="polite"></div>
+
+  <!-- ══════════════════════════════════════
+       STATUS BAR (footer)
+  ══════════════════════════════════════ -->
+  <footer class="status-bar" role="contentinfo">
+    <div class="status-bar-inner">
+      <div class="status-bar-item">
+        <span id="footer-dot" class="status-bar-dot"></span>
+        <span id="footer-model">Model: —</span>
+        <span class="status-bar-divider">|</span>
+        <span id="footer-reports">0 reports indexed</span>
+      </div>
+      <div class="status-bar-right">
+        <span class="status-bar-item">Vectorless RAG v1.0 · No Vector DB</span>
+      </div>
+    </div>
+  </footer>
 
   <script src="/static/js/app.js"></script>
 </body>
