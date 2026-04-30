@@ -167,3 +167,36 @@ def answer(
     answer_text = response["message"]["content"].strip()
     logger.info("Expert answer length: %d chars", len(answer_text))
     return answer_text
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Full Pipeline Orchestrator
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+def query_pipeline(
+    question: str,
+    index: dict,
+    pages_text: dict[str, str],
+    model: str,
+    base_url: str | None = None,
+) -> dict:
+    """
+    Run the complete 3-step pipeline and return a structured result.
+    """
+    # Step A — Navigate
+    page_nums = navigate(question, index, model, base_url)
+    # Step B — Read
+    context = read_pages(page_nums, pages_text)
+    if not context.strip():
+        return {
+            "question": question,
+            "selected_pages": page_nums,
+            "answer": "Could not find relevant content in the selected pages.",
+            "status": "no_context",
+        }
+    # Step C — Expert Answer
+    final_answer = answer(question, context, model, base_url)
+    return {
+        "question": question,
+        "selected_pages": page_nums,
+        "answer": final_answer,
+        "status": "success",
+    }
