@@ -158,3 +158,31 @@ async def query_report(req: QueryRequest):
         base_url=OLLAMA_BASE_URL,
     )
     return QueryResponse(**result)
+
+@app.get("/indices", tags=["Index Management"])
+async def list_indices():
+    """List all ingested PDFs that have a PageIndex."""
+    indices = []
+    if INDEX_DIR.exists():
+        for entry in INDEX_DIR.iterdir():
+            if entry.is_dir() and (entry / "index.json").exists():
+                with open(entry / "index.json", "r", encoding="utf-8") as f:
+                    idx = ujson.load(f)
+                indices.append({
+                    "pdf_name": entry.name,
+                    "pages_indexed": len(idx),
+                })
+    return {"total": len(indices), "indices": indices}
+@app.get("/index/{pdf_name}", tags=["Index Management"])
+async def get_index(pdf_name: str):
+    """Return the full PageIndex (index.json) for a specific PDF."""
+    pdf_stem = Path(pdf_name).stem
+    index_path = INDEX_DIR / pdf_stem / "index.json"
+    if not index_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"No index found for '{pdf_name}'.",
+        )
+    with open(index_path, "r", encoding="utf-8") as f:
+        index = ujson.load(f)
+    return {"pdf_name": pdf_stem, "pages": len(index), "index": index}
