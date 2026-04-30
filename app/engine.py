@@ -107,3 +107,63 @@ def read_pages(page_nums: list[int], pages_text: dict[str, str]) -> str:
         len(combined), len(chunks),
     )
     return combined
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Step C — The Expert
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXPERT_SYSTEM_PROMPT = """You are a SEBI-certified financial analyst with deep expertise in
+Indian corporate finance and annual report analysis.
+You understand:
+  - Indian Accounting Standards (Ind AS) and Indian GAAP
+  - Financial terminology: Crores, Lakhs, FY (Financial Year), PAT, EBITDA,
+    EPS, Book Value, Debt-to-Equity, Promoter Holding
+  - Standalone vs Consolidated financial statements
+  - Schedule III format of the Companies Act 2013
+  - SEBI LODR (Listing Obligations and Disclosure Requirements)
+  - Related Party Transactions, Contingent Liabilities, Deferred Tax
+CRITICAL — Indian Financial Year (FY) Mapping:
+  FY24 = April 1, 2023 → March 31, 2024  ("Year ended March 31, 2024")
+  FY25 = April 1, 2024 → March 31, 2025  ("Year ended March 31, 2025")
+  FY26 = April 1, 2025 → March 31, 2026  ("Year ended March 31, 2026")
+  General rule: FY{YY} always ends on March 31, 20{YY}.
+RULES:
+  1. Answer ONLY using the provided page context. Do NOT hallucinate data.
+  2. If the context does not contain sufficient information, say so clearly.
+  3. Quote specific figures with their units (₹ in Crores/Lakhs).
+  4. Mention the source page number(s) in your answer.
+  5. If comparing Standalone vs Consolidated, clarify which one you are citing.
+  6. Be precise, professional, and concise.
+  7. NEVER relabel data from one financial year as another. If the user asks
+     for FY24 data but the context only contains FY26 data, explicitly state
+     that FY24 data is not available in the provided pages.
+  8. Always verify the calendar year in the context matches the requested FY
+     (e.g., FY24 = "Year ended March 31, 2024"). If they don't match, say so."""
+def answer(
+    question: str,
+    context: str,
+    model: str,
+    base_url: str | None = None,
+) -> str:
+    """
+    Step C: Send the raw page text + question to Ollama with the
+    SEBI expert system prompt. Returns the final analytical answer.
+    """
+    user_prompt = (
+        f"QUESTION: {question}\n\n"
+        f"CONTEXT (extracted pages from the annual report):\n{context}"
+    )
+    client_kwargs = {}
+    if base_url:
+        client_kwargs["host"] = base_url
+    client = ollama.Client(**client_kwargs)
+    response = client.chat(
+        model=model,
+        messages=[
+            {"role": "system", "content": EXPERT_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        options={"temperature": 0.3, "num_predict": 1024},
+    )
+    answer_text = response["message"]["content"].strip()
+    logger.info("Expert answer length: %d chars", len(answer_text))
+    return answer_text
