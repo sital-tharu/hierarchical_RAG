@@ -70,3 +70,22 @@ class QueryResponse(BaseModel):
     answer: str
     status: str
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Routes
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@app.get("/", tags=["Health"])
+async def root():
+    """Health check & welcome message."""
+    return {
+        "service": "Indian Finance RAG (Vectorless)",
+        "model": OLLAMA_MODEL,
+        "status": "running",
+        "docs": "/docs",
+    }
+@app.get("/app", tags=["Frontend"], include_in_schema=False)
+async def serve_frontend():
+    """Serve the frontend GUI."""
+    index_path = FRONTEND_DIR / "index.html"
+    if index_path.exists():
+        return FileResponse(str(index_path))
+    return JSONResponse({"error": "Frontend not found"}, status_code=404)
