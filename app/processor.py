@@ -27,3 +27,50 @@ def extract_pages(pdf_path: str) -> dict[int, str]:
             pages[idx] = text
     logger.info("Extracted %d non-empty pages from %s", len(pages), pdf_path)
     return pages
+# ──────────────────────────────────────────────
+# 2. Per-Page Structural Summary via Ollama
+# ──────────────────────────────────────────────
+SUMMARY_SYSTEM_PROMPT = """You are an expert Indian financial document analyst.
+You understand Indian GAAP, Ind AS, SEBI regulations, and terminology such as
+Crores, Lakhs, FY (Financial Year), Standalone vs Consolidated statements,
+Schedule III of Companies Act, and common sections of Indian annual reports.
+CRITICAL — Indian Financial Year (FY) Mapping:
+  FY24 = April 1, 2023 → March 31, 2024  ("Year ended March 31, 2024")
+  FY25 = April 1, 2024 → March 31, 2025  ("Year ended March 31, 2025")
+  FY26 = April 1, 2025 → March 31, 2026  ("Year ended March 31, 2026")
+  General rule: FY{YY} always ends on March 31, 20{YY}.
+  When you see "Year ended March 31, 2026" — that is FY26, NOT FY24 or FY25.
+Your task: Given the raw text of a SINGLE PAGE from an Indian company's
+annual report, produce a concise 1-sentence structural summary that captures:
+  1. The document section (e.g., Balance Sheet, P&L, Notes to Accounts,
+     Director's Report, Auditor's Report, Cash Flow Statement, etc.)
+  2. Key entities, figures, or values mentioned (e.g., Revenue: ₹5,432 Crores)
+  3. The CORRECT financial year using FY notation (e.g., FY26 for year ended
+     March 31, 2026) and statement type (Standalone / Consolidated)
+Format: "Page {N}: <summary>"
+Do NOT reproduce the full text. Be precise and information-dense."""
+def generate_page_summary(
+    page_num: int,
+    text: str,
+    model: str,
+    base_url: str | None = None,
+) -> str:
+    """
+    Call Ollama to generate a 1-sentence structural summary for a page.
+    """
+    user_prompt = f"Page number: {page_num}\n\n--- PAGE TEXT ---\n{text[:3000]}"
+    client_kwargs = {}
+    if base_url:
+        client_kwargs["host"] = base_url
+    client = ollama.Client(**client_kwargs)
+    response = client.chat(
+        model=model,
+        messages=[
+            {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        options={"temperature": 0.2, "num_predict": 150},
+    )
+    summary = response["message"]["content"].strip()
+    logger.debug("Page %d summary: %s", page_num, summary)
+    return summary
