@@ -89,3 +89,37 @@ async def serve_frontend():
     if index_path.exists():
         return FileResponse(str(index_path))
     return JSONResponse({"error": "Frontend not found"}, status_code=404)
+
+@app.post("/ingest", tags=["Ingestion"])
+async def ingest_pdf(file: UploadFile = File(...)):
+    """
+    Upload an Indian Financial Annual Report PDF.
+    Extracts text, generates per-page structural summaries via Ollama,
+    and saves the PageIndex as index.json.
+    """
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
+    # Save uploaded file
+    pdf_path = UPLOAD_DIR / file.filename
+    with open(pdf_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    logger.info("PDF saved → %s", pdf_path)
+    # Build PageIndex
+    try:
+        index = build_page_index(
+            pdf_path=str(pdf_path),
+            model=OLLAMA_MODEL,
+            index_dir=str(INDEX_DIR),
+            base_url=OLLAMA_BASE_URL,
+        )
+    except Exception as e:
+        logger.exception("Ingestion failed for %s", file.filename)
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {e}")
+    return JSONResponse(
+        content={
+            "message": f"Successfully ingested '{file.filename}'",
+            "pages_indexed": len(index),
+            "index_preview": dict(list(index.items())[:3]),
+        },
+        status_code=201,
+    )
